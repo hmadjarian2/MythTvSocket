@@ -1,25 +1,27 @@
 require 'socket'
 
-def build_command_string(command)
-  return "%-8d%s" % [command.length, command]
+def build_command_string(command_text)
+  return "%-8d%s" % [command_text.length, command_text]
 end
 
 server = '192.168.1.10'
 port = 6543
-initial_version = 50
+initial_protocol_version = 50
+client_name = 'baba_booey'
 delimiter = '[]:[]'
 reject = 'REJECT'
 ok = 'OK'
 
-version_command = '21      MYTH_PROTO_VERSION %s'
-ann_command = '23      ANN Playback sycamore 0'
-free_recorder_count_command = '23      GET_FREE_RECORDER_COUNT'
+version_command = 'MYTH_PROTO_VERSION %s'
+ann_command = 'ANN Playback %s 0'
+free_recorder_count_command = 'GET_FREE_RECORDER_COUNT'
+done_command = 'DONE'
 
-puts 'Initial Version %s' % initial_version
+puts 'Initial Version %s' % initial_protocol_version
 
 connection = TCPSocket::new(server, port)
 
-connection.write(version_command % initial_version)
+connection.write(build_command_string(version_command % initial_protocol_version))
 byte_count = Integer(connection.recv(8))
 
 bytes_received = 0
@@ -34,13 +36,13 @@ puts bytes
 
 response = bytes.split(delimiter)
 
-actual_version = response[1]
-puts 'Actual Protocol %s' % actual_version
+actual_protocol_version = response[1]
+puts 'Actual Protocol %s' % actual_protocol_version
 
 if response[0] == reject
   connection.close
   connection = TCPSocket::new(server, port)
-  connection.write(version_command % actual_version)
+  connection.write(build_command_string(version_command % actual_protocol_version))
   byte_count = Integer(connection.recv(8))
 
   bytes_received = 0
@@ -54,7 +56,7 @@ end
 
 puts bytes
 
-connection.write(ann_command)
+connection.write(build_command_string(ann_command % client_name))
 byte_count = Integer(connection.recv(8))
 
 bytes_received = 0
@@ -73,7 +75,7 @@ if response[0] == ok
   puts 'ANN Playback is ok'
 end
 
-connection.write(free_recorder_count_command)
+connection.write(build_command_string(free_recorder_count_command))
 byte_count = Integer(connection.recv(8))
 
 bytes_received = 0
@@ -89,5 +91,7 @@ puts bytes
 response = bytes.split(delimiter)
 
 puts 'Free recorder count is %s' % response[0]
+
+connection.write(build_command_string(done_command))
 
 connection.close
