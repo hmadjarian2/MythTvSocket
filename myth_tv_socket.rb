@@ -1,8 +1,5 @@
 require 'socket'
-
-def build_command_string(command_text)
-  return "%-8d%s" % [command_text.length, command_text]
-end
+require 'command_string_builder'
 
 server = '192.168.1.10'
 port = 6543
@@ -21,7 +18,8 @@ puts 'Initial Version %s' % initial_protocol_version
 
 connection = TCPSocket::new(server, port)
 
-connection.write(build_command_string(version_command % initial_protocol_version))
+#connection.write(build_command_string(version_command % initial_protocol_version))
+connection.write(CommandStringBuilder.build(version_command % initial_protocol_version))
 byte_count = Integer(connection.recv(8))
 
 bytes_received = 0
@@ -42,7 +40,7 @@ puts 'Actual Protocol %s' % actual_protocol_version
 if response[0] == reject
   connection.close
   connection = TCPSocket::new(server, port)
-  connection.write(build_command_string(version_command % actual_protocol_version))
+  connection.write(CommandStringBuilder.build(version_command % actual_protocol_version))
   byte_count = Integer(connection.recv(8))
 
   bytes_received = 0
@@ -56,7 +54,7 @@ end
 
 puts bytes
 
-connection.write(build_command_string(ann_command % client_name))
+connection.write(CommandStringBuilder.build(ann_command % client_name))
 byte_count = Integer(connection.recv(8))
 
 bytes_received = 0
@@ -75,7 +73,7 @@ if response[0] == ok
   puts 'ANN Playback is ok'
 end
 
-connection.write(build_command_string(free_recorder_count_command))
+connection.write(CommandStringBuilder.build(free_recorder_count_command))
 byte_count = Integer(connection.recv(8))
 
 bytes_received = 0
@@ -92,6 +90,6 @@ response = bytes.split(delimiter)
 
 puts 'Free recorder count is %s' % response[0]
 
-connection.write(build_command_string(done_command))
+connection.write(CommandStringBuilder.build(done_command))
 
 connection.close
