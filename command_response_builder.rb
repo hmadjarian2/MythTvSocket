@@ -1,3 +1,5 @@
+require 'myth_tv_protocol'
+
 class CommandResponseBuilder
 	def self.build(connection)
 		byte_count_length = 8
@@ -14,6 +16,6 @@ class CommandResponseBuilder
 
 		puts bytes
 
-		return bytes
+		return bytes.split(MythTvProtocol::DELIMITER)
 	end
 end

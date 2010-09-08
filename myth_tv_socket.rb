@@ -2,6 +2,7 @@ require 'rubygems'
 require 'parseconfig'
 require 'socket'
 
+require 'myth_tv_protocol'
 require 'command_string_builder'
 require 'command_response_builder'
 
@@ -22,8 +23,7 @@ puts 'Initial Version %s' % initial_protocol_version
 connection = TCPSocket::new(server, port)
 
 connection.write(CommandStringBuilder.build(version_command % initial_protocol_version))
-bytes = CommandResponseBuilder.build(connection)
-response = bytes.split(MythTvProtocol::DELIMITER)
+response = CommandResponseBuilder.build(connection)
 
 actual_protocol_version = response[1]
 puts 'Actual Protocol %s' % actual_protocol_version
@@ -32,20 +32,18 @@ if response[0] == MythTvProtocol::REJECT
   connection.close
   connection = TCPSocket::new(server, port)
   connection.write(CommandStringBuilder.build(version_command % actual_protocol_version))
-	bytes = CommandResponseBuilder.build(connection)
+	response = CommandResponseBuilder.build(connection)
 end
 
 connection.write(CommandStringBuilder.build(ann_command % client_name))
-bytes = CommandResponseBuilder.build(connection)
-response = bytes.split(MythTvProtocol::DELIMITER)
+response = CommandResponseBuilder.build(connection)
 
 if response[0] == MythTvProtocol::OK
   puts 'ANN Playback is ok'
 end
 
 connection.write(CommandStringBuilder.build(free_recorder_count_command))
-bytes = CommandResponseBuilder.build(connection)
-response = bytes.split(MythTvProtocol::DELIMITER)
+response = CommandResponseBuilder.build(connection)
 
 puts 'Free recorder count is %s' % response[0]
 
