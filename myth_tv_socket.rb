@@ -1,5 +1,6 @@
 require 'socket'
 require 'command_string_builder'
+require 'command_response_builder'
 
 server = '192.168.1.10'
 port = 6543
@@ -18,20 +19,8 @@ puts 'Initial Version %s' % initial_protocol_version
 
 connection = TCPSocket::new(server, port)
 
-#connection.write(build_command_string(version_command % initial_protocol_version))
 connection.write(CommandStringBuilder.build(version_command % initial_protocol_version))
-byte_count = Integer(connection.recv(8))
-
-bytes_received = 0
-bytes = ''
-
-while bytes_received < byte_count
-  bytes += connection.recv(byte_count - bytes_received)
-  bytes_received = bytes.length
-end
-
-puts bytes
-
+bytes = CommandResponseBuilder.build(connection)
 response = bytes.split(delimiter)
 
 actual_protocol_version = response[1]
@@ -41,32 +30,11 @@ if response[0] == reject
   connection.close
   connection = TCPSocket::new(server, port)
   connection.write(CommandStringBuilder.build(version_command % actual_protocol_version))
-  byte_count = Integer(connection.recv(8))
-
-  bytes_received = 0
-  bytes = ''
-
-  while bytes_received < byte_count
-    bytes += connection.recv(byte_count - bytes_received)
-    bytes_received = bytes.length
-  end
+	bytes = CommandResponseBuilder.build(connection)
 end
-
-puts bytes
 
 connection.write(CommandStringBuilder.build(ann_command % client_name))
-byte_count = Integer(connection.recv(8))
-
-bytes_received = 0
-bytes = ''
-
-while bytes_received < byte_count
-  bytes += connection.recv(byte_count - bytes_received)
-  bytes_received = bytes.length
-end
-
-puts bytes
-
+bytes = CommandResponseBuilder.build(connection)
 response = bytes.split(delimiter)
 
 if response[0] == ok
@@ -74,18 +42,7 @@ if response[0] == ok
 end
 
 connection.write(CommandStringBuilder.build(free_recorder_count_command))
-byte_count = Integer(connection.recv(8))
-
-bytes_received = 0
-bytes = ''
-
-while bytes_received < byte_count
-  bytes += connection.recv(byte_count - bytes_received)
-  bytes_received = bytes.length
-end
-
-puts bytes
-
+bytes = CommandResponseBuilder.build(connection)
 response = bytes.split(delimiter)
 
 puts 'Free recorder count is %s' % response[0]
