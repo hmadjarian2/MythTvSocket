@@ -1,11 +1,17 @@
+require 'rubygems'
+require 'parseconfig'
 require 'socket'
+
 require 'command_string_builder'
 require 'command_response_builder'
 
-server = '192.168.1.10'
-port = 6543
-initial_protocol_version = 50
-client_name = 'baba_booey'
+config = ParseConfig.new('./config.cnf')
+
+server = "#{config.params['server']['name']}"
+port = "#{config.params['server']['port']}"
+initial_protocol_version = "#{config.params['server']['protocol_version']}"
+client_name = "#{config.params['client']['name']}"
+
 delimiter = '[]:[]'
 reject = 'REJECT'
 ok = 'OK'
